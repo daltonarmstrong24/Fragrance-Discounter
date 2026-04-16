@@ -18,7 +18,6 @@ with st.sidebar:
     st.header("Project Statistics")
     
     try:
-        # Note: Using lowercase table names and columns to match your Supabase image
         brand_res = conn.table("brands").select("*", count="exact").execute()
         frag_res = conn.table("fragrances").select("*", count="exact").execute()
         
@@ -28,7 +27,6 @@ with st.sidebar:
         st.markdown("---")
         st.subheader("Filter by Brand")
         
-        # Pulling brandid and brand_name (all lowercase)
         brand_data = conn.table("brands").select("brandid, brand_name").execute()
         brand_list = {item['brand_name']: item['brandid'] for item in brand_data.data}
         selected_brand = st.selectbox("Select a Brand", options=["All"] + list(brand_list.keys()))
@@ -40,27 +38,27 @@ with st.sidebar:
 # 4. Main Search Bar
 search_query = st.text_input("Search for a fragrance name...", placeholder="e.g. Aventus")
 
-# 5. Inventory Query (The Relational Join)
+# 5. Inventory Query (CRITICAL FIX HERE)
 try:
-    # We use lowercase for EVERYTHING: table names and column names
+    # We select from fragrancevariants, but our JOIN path uses the TABLE names
     builder = conn.table("fragrancevariants").select("""
         price, 
         fragsize, 
         stockamount,
         fragid,
-        fragrances (
+        fragrances!inner (
             frag_name,
+            brandid,
             brands (brand_name)
         )
     """)
 
-    # Filter by Brand if selected
+    # When filtering across a join, we use: table_name.column_name
     if selected_brand != "All":
-        builder = builder.eq("fragid.brandid", brand_list[selected_brand])
+        builder = builder.eq("fragrances.brandid", brand_list[selected_brand])
 
-    # Filter by Name if searched
     if search_query:
-        builder = builder.ilike("fragid.frag_name", f"%{search_query}%")
+        builder = builder.ilike("fragrances.frag_name", f"%{search_query}%")
 
     results = builder.execute()
 
@@ -70,7 +68,6 @@ try:
     if results.data:
         clean_data = []
         for item in results.data:
-            # Safely navigate the nested dictionaries from our join
             frag_info = item.get('fragrances')
             if frag_info:
                 brand_info = frag_info.get('brands')
@@ -88,4 +85,4 @@ try:
 
 except Exception as e:
     st.error(f"Database Query Error: {e}")
-    st.info("Check that RLS (Row Level Security) is disabled or set to Public in Supabase!")
+    st.info("This usually means a relationship path (like fragrances.brandid) is slightly off.")
