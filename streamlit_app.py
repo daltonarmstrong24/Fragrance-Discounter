@@ -1,6 +1,14 @@
 import streamlit as st
 from st_supabase_connection import SupabaseConnection
 
+# This automatically looks for the [connections.supabase] you just saved in Secrets
+conn = st.connection("supabase", type=SupabaseConnection)
+
+# Test if it works by showing your brands
+st.write("### Our Brands")
+df = conn.query("*", table="Brands").execute()
+st.table(df.data)
+
 # 1. Page Config
 st.set_page_config(page_title="Fragrance Discounter", page_icon="✨")
 st.title("✨ Online Fragrance Discounter")
