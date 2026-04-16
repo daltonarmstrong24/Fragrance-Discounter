@@ -1,8 +1,10 @@
 import streamlit as st
 from st_supabase_connection import SupabaseConnection
 
+# 1. Page Configuration
 st.set_page_config(page_title="Fragrance Discounter", page_icon="🧴", layout="wide")
 
+# 2. Connection Logic
 try:
     conn = st.connection("supabase", type=SupabaseConnection)
 except Exception as e:
@@ -28,12 +30,12 @@ with st.sidebar:
         st.error("Error loading sidebar data.")
 
 # --- MAIN CONTENT ---
-search_query = st.text_input("Search for a fragrance name...")
+search_query = st.text_input("Search for a fragrance name...", placeholder="e.g. Sauvage")
 
 try:
-    # 1. Fetch Inventory
+    # 1. Fetch Inventory - Including varianceid this time!
     builder = conn.table("fragrancevariants").select("""
-        price, fragsize, stockamount, fragid,
+        varianceid, price, fragsize, stockamount, fragid,
         fragrances!inner ( frag_name, brandid, brands (brand_name) )
     """)
 
@@ -63,9 +65,9 @@ try:
                     st.write(f"**Stock:** {item['stockamount']} units")
                 
                 with col3:
-                    # THE JUNCTION TABLE BUTTON
-                    if st.button("View Scent Notes", key=f"btn_{item['fragid']}"):
-                        # Query the FragranceNotes -> Notes link
+                    # FIX: Using varianceid ensures every button has a unique key
+                    # even if it's the same fragrance in different sizes.
+                    if st.button("View Scent Notes", key=f"btn_{item['varianceid']}"):
                         note_query = conn.table("fragrancenotes").select("""
                             notes ( notename )
                         """).eq("fragid", item['fragid']).execute()
