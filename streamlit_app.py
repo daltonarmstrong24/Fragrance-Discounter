@@ -1,10 +1,10 @@
 import streamlit as st
 from st_supabase_connection import SupabaseConnection
 
-# 1. Page Configuration
+# 1. Title Page
 st.set_page_config(page_title="Fragrance Discounter", page_icon="🧴", layout="wide")
 
-# 2. Connection Logic
+# 2. Connecting the database
 try:
     conn = st.connection("supabase", type=SupabaseConnection)
 except Exception as e:
@@ -13,7 +13,7 @@ except Exception as e:
 
 st.title("✨ Online Fragrance Discounter")
 
-# --- SIDEBAR ---
+# Creating the statistics sidebar
 with st.sidebar:
     st.header("Project Statistics")
     try:
@@ -29,11 +29,11 @@ with st.sidebar:
     except:
         st.error("Error loading sidebar data.")
 
-# --- MAIN CONTENT ---
+# Functions
 search_query = st.text_input("Search for a fragrance name...", placeholder="e.g. Sauvage")
 
 try:
-    # 1. Fetch Inventory - Including varianceid this time!
+    # 1. Grab specific inventory items
     builder = conn.table("fragrancevariants").select("""
         varianceid, price, fragsize, stockamount, fragid,
         fragrances!inner ( frag_name, brandid, brands (brand_name) )
@@ -52,7 +52,7 @@ try:
             frag_info = item['fragrances']
             brand_info = frag_info['brands']
             
-            # Create a clean "card" for each item
+            # Create a clean slate for each item
             with st.container(border=True):
                 col1, col2, col3 = st.columns([2, 1, 1])
                 
@@ -65,8 +65,6 @@ try:
                     st.write(f"**Stock:** {item['stockamount']} units")
                 
                 with col3:
-                    # FIX: Using varianceid ensures every button has a unique key
-                    # even if it's the same fragrance in different sizes.
                     if st.button("View Scent Notes", key=f"btn_{item['varianceid']}"):
                         note_query = conn.table("fragrancenotes").select("""
                             notes ( notename )
