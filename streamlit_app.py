@@ -11,13 +11,14 @@ except Exception as e:
     st.error("Connection Error!")
     st.stop()
 
-# 3. Session State for Login Persistence
+# 3. Session State for the page to not reset after I click 
+# anything at all smh
 if 'user' not in st.session_state:
     st.session_state.user = None
 
 st.title("✨ Online Fragrance Discounter")
 
-# 4. Sidebar for Auth, Stats, and Filters
+# 4. Sidebar for login, stats, and filters
 with st.sidebar:
     st.header("👤 User Account")
     if st.session_state.user is None:
@@ -71,7 +72,7 @@ if st.session_state.user and st.session_state.user.get('is_admin'):
 
 tabs = st.tabs(tabs_to_show)
 
-# --- TAB 1: SHOP ---
+# TAB 1: SHOP 
 with tabs[0]:
     search = st.text_input("Search fragrances...", placeholder="e.g. Aventus")
     
@@ -139,7 +140,7 @@ with tabs[0]:
     except Exception as e:
         st.error(f"Error fetching inventory: {e}")
 
-# --- TAB 2: WISHLIST ---
+# TAB 2: WISHLIST
 with tabs[1]:
     if st.session_state.user:
         st.subheader("Your Saved Items")
@@ -151,7 +152,7 @@ with tabs[1]:
         else: st.write("Wishlist is empty.")
     else: st.info("Log in to view your wishlist.")
 
-# --- TAB 3: ORDER HISTORY ---
+# TAB 3: ORDER HISTORY
 with tabs[2]:
     if st.session_state.user:
         st.subheader("Your Order History")
@@ -165,7 +166,7 @@ with tabs[2]:
         else: st.write("No orders found.")
     else: st.info("Log in to view your orders.")
 
-# --- TAB 4: ADMIN PANEL ---
+# TAB 4: ADMIN PANEL
 if "🛠️ Admin Panel" in tabs_to_show:
     with tabs[3]:
         st.header("Inventory Management")
